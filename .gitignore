@@ -1,0 +1,7 @@
+# Ignore local environment files
+.env
+*.log
+__pycache__/
+
+# Ignore Jupyter notebook output
+.ipynb_checkpoints/

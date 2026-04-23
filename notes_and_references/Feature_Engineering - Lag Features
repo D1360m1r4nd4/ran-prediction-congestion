@@ -1,0 +1,44 @@
+# Lag Features in Time Series for RAN (Radio Access Networks)
+
+## What are Lag Features?
+Lag features are derived by shifting a time series variable backward by one or more time steps. For a given variable `X` at time `t`, its **lag‑k** feature is the value of `X` at time `t-k`. When building a supervised learning dataset, each row (timestamp) is enriched with columns such as `X_lag1`, `X_lag2`, …, containing past observations.
+
+## Why Use Lag Features?
+- **Capture temporal dependencies** – Many phenomena depend on recent history.
+- **Enable standard ML models** – They allow models like linear regression, random forest, or gradient boosting to learn time‑based patterns without specialized time‑series models (e.g., ARIMA).
+- **Simplify feature engineering** – A powerful way to incorporate sequential information into a tabular format.
+
+## Relevance in Mobile Networks (RAN)
+Radio Access Networks exhibit strong time‑dependent behaviour:
+
+- **Traffic patterns** – User activity follows daily (peak/off‑peak), weekly, and event‑driven cycles. PRB utilization, number of active users, and throughput are highly autocorrelated.
+- **Performance degradation** – Drops, radio link failures (RLF), and interference often show trends or spikes that can be anticipated from preceding values.
+- **Handover success** – Handover performance may depend on recent load or mobility conditions.
+- **Capacity planning** – Forecasting future load helps operators proactively allocate resources and optimise network performance.
+
+By including lag features, a model can:
+- Predict future PRB utilization using its own past values.
+- Detect early signs of congestion or failures.
+- Learn daily seasonality without explicit hour encoding (e.g., using lag‑24 to capture yesterday’s same hour).
+
+## Practical Considerations
+- **Temporal ordering** – Data must be sorted by time. When splitting into train/test, never use future data to predict past (chronological split).
+- **Multiple lags** – Experiment with different lags (e.g., 1, 2, 24, 168 for daily/weekly cycles).
+- **Avoid data leakage** – Lag features should be computed from information available at the time of prediction. In a live system, this means using only historical data.
+- **Multicollinearity** – Lag features can be highly correlated. Tree‑based models handle it well; linear models may need regularisation (Ridge, Lasso).
+- **Handling missing values** – Early periods with no lag values should be removed or filled.
+
+## Example Code Snippet (Pandas)
+```python
+import pandas as pd
+
+# Assume df is sorted by time (e.g., by 'datetime')
+df = df.sort_values('datetime')
+
+# Create lag features
+df['prb_utilization_lag1'] = df['dl_prb_utilization'].shift(1)
+df['prb_utilization_lag2'] = df['dl_prb_utilization'].shift(2)
+df['prb_utilization_lag24'] = df['dl_prb_utilization'].shift(24)   # daily lag
+
+# Drop rows with NaN lags (first 24 rows)
+df = df.dropna()
